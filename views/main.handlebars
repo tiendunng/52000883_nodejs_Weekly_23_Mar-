@@ -1,0 +1,200 @@
+<h2>Danh sách người dùng</h2>
+<input type="button" class="btn btn-success" value="Thêm người dùng" onclick="navigateToCreateUserPage()"/>
+<p>Chọn một người dùng để xem chi tiết</p>
+<table class="table">
+    <thead>
+      <tr>
+        <th>STT</th>
+        <th>Họ và Tên</th>
+        <th>Giới tính</th>
+        <th>Tuổi</th>
+        <th>Email</th>
+        <th>Thao tác</th>
+      </tr>
+    </thead>
+    <tbody>
+        {{#each data.users}}
+        <tr>
+            <td>{{id}}</td>
+            <td><a href="/detail/{{id}}">{{fullName}}</a></td>
+            <td>{{gender}}</td>
+            <td>{{age}}</td>
+            <td>{{email}}</td>
+            <td>
+                <input data-name="{{fullName}}" data-id="{{id}}" data-gender="{{gender}}" data-age="{{age}}" data-email="{{email}}" type="button" class="btn btn-primary btn-edit" value="Chỉnh sửa"/>
+                <input data-name="{{fullName}}" data-id="{{id}}" type="button" class="btn btn-danger btn-delete" value="Xóa" />
+            </td>
+        </tr>
+        {{/each}}
+    </tbody>
+    <script>
+        function navigateToCreateUserPage() {
+            window.location.href = '/createUser'
+        }
+
+        window.addEventListener('load', (event) => {
+            const btnDel = document.querySelectorAll('.btn-delete')
+            const confirmDel = document.getElementById('confirm-delete')
+            const btnEdit = document.querySelectorAll('.btn-edit')
+
+            for (let i = 0; i < btnDel.length; i++) { 
+                btnDel[i].addEventListener('click', function (e) {
+                    let idDel = e.target.dataset.id
+                    let idName = e.target.dataset.name
+                    document.getElementById('nameDialogDelete').innerText = idName
+                    document.getElementById('confirm-delete').setAttribute('data-iddel', idDel)
+                    $('#myModal').modal('show')
+                })
+            } 
+
+            confirmDel.addEventListener('click', function (e) {
+                let idDel = e.target.dataset.iddel
+                $('#myModal').modal('hide')
+                window.location.href = `/delete/${idDel}`
+            })
+
+            for (let i = 0; i < btnEdit.length; i++) {
+              btnEdit[i].addEventListener('click', function (e) {
+                //Set data for inputs
+                document.getElementById('name').value = e.target.dataset.name
+                document.getElementById('age').value = e.target.dataset.age
+                document.getElementById('email').value = e.target.dataset.email
+                if (e.target.dataset.gender === 'female') {
+                    document.getElementById('gender-female').setAttribute('checked', 'checked')
+                }
+                document.getElementById('form-upadte').setAttribute('action', `/edit/${e.target.dataset.id}`)
+                $('#myModal1').modal('show')
+              })
+            }
+
+            const checkErrorEdit = document.getElementById('edit-error').innerText
+            if (checkErrorEdit.trim() !== '') {
+                let idErr = document.getElementById('id-error').innerText.trim()
+                document.getElementById('error-edit').innerText = checkErrorEdit.trim()
+                let element = document.querySelector(`[data-id="${idErr}"]`)
+                let old = document.getElementById('old-data').innerText.trim()
+                let oldDataEdit = old.split(',')
+                element.click()
+                document.getElementById('name').value = oldDataEdit[0].trim()
+                if (oldDataEdit[1].trim() == 'female') {
+                  document.getElementById('gender-female').setAttribute('checked', 'checked')
+                }
+                document.getElementById('email').value = oldDataEdit[2].trim()
+                document.getElementById('age').value = Number(oldDataEdit[3].trim())
+            }
+        })
+    </script>
+</table>
+
+  <div id="edit-error" style="display: none">
+  {{#if edit.editId}}
+        {{edit.editErr}}
+  {{/if}}
+  </div>
+
+  <div id="id-error" style="display: none">
+  {{#if edit.editId}}
+    {{edit.editId}}
+  {{/if}}
+  </div>
+
+  <div id="old-data" style="display: none">
+    {{#if oldData}}
+      {{oldData.name}}, {{oldData.gender}}, {{oldData.email}}, {{oldData.age}}
+    {{/if}}
+  </div>
+
+<!-- Flash message -->
+  {{#if flash}}
+  <div id="flash-alert" class="alert alert-{{flash.type}} text-center w-25 mx-auto my-3">
+    <button type="button" class="close" data-dismiss="alert">&times;</button>
+    <span><strong>{{flash.message}}</strong></span>
+  </div>
+  {{/if}}
+  <!-- End Flash message -->
+
+  
+    <!-- Confirm delete -->
+    <div id="myModal" class="modal fade" role="dialog">
+      <div class="modal-dialog">
+        <div class="modal-content">
+
+          <!-- Modal Header -->
+          <div class="modal-header">
+            <h4 class="modal-title">Xóa người dùng</h4>
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+          </div>
+
+          <!-- Modal body -->
+          <div class="modal-body">
+            Bạn có chắc rằng muốn xóa <strong id="nameDialogDelete">Trần Minh Trí</strong>?
+          </div>
+
+          <!-- Modal footer -->
+          <div class="modal-footer">
+            <button id="confirm-delete" type="button" class="btn btn-danger">Xóa</button>
+            <button type="button" class="btn btn-dark" data-dismiss="modal">Đóng</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+    <!-- End Confirm delete -->
+   
+
+
+    <!-- Update user -->
+    <div id="myModal1" class="modal fade" role="dialog">
+      <div class="modal-dialog" >
+        <div class="modal-content">
+
+          <!-- Modal Header -->
+          <div class="modal-header">
+            <h4 class="modal-title">Cập nhật thông tin người dùng</h4>
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+          </div>
+
+          <!-- Modal body -->
+          <div class="modal-body">
+            <form id="form-upadte" action="#" method="post">
+              <div class="form-group">
+                <label for="user">Họ tên</label>
+                <input value="Trần Minh Trí" class="form-control" type="text" placeholder="Nhập tên người dùng" id="name"
+                  name="name">
+              </div>
+              <div class="form-group">
+                <div class="custom-control custom-radio custom-control-inline">
+                  <input checked type="radio" class="custom-control-input" id="gender-male" name="gender" value="male">
+                  <label class="custom-control-label" for="gender-male">Nam</label>
+                </div>
+                <div class="custom-control custom-radio custom-control-inline">
+                  <input type="radio" class="custom-control-input" id="gender-female" name="gender" value="female">
+                  <label class="custom-control-label" for="gender-female">Nữ</label>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="age">Tuổi</label>
+                <input value="20" maxlength="3" class="form-control" type="number" placeholder="Nhập tuổi" min="18"
+                  max="100" id="age" name="age">
+              </div>
+              <div class="form-group">
+                <label for="email">Email</label>
+                <input value="tri@gmail.com" class="form-control" type="text" placeholder="Nhập email" id="email"
+                  name="email">
+              </div>
+              <div class="alert alert-danger" id="error-edit">
+                Không có thông tin lỗi
+              </div>
+            </form>
+          </div>
+
+          <!-- Modal footer -->
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-primary" form="form-upadte">Cập nhật</button>
+            <button type="button" class="btn btn-dark" data-dismiss="modal">Đóng</button>
+          </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  <!-- End Update user -->
